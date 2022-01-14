@@ -42,7 +42,7 @@ resource "aws_security_group" "lb_sg" {
   description = "controls access to the application ELB"
 
   vpc_id = var.vpc_id
-  name   = "${var.app_name}-${var.environment}-ecs-lbsg"
+  name   = "${var.name}-${var.environment}-ecs-lbsg"
 
   ingress {
     protocol    = "tcp"
@@ -65,7 +65,7 @@ resource "aws_security_group" "lb_sg" {
 resource "aws_security_group" "instance_sg" {
   description = "controls direct access to application instances"
   vpc_id      = var.vpc_id
-  name        = "${var.app_name}-${var.environment}-ecs-inst-sg"
+  name        = "${var.name}-${var.environment}-ecs-inst-sg"
 
   ingress {
     protocol  = "tcp"
@@ -88,11 +88,11 @@ resource "aws_security_group" "instance_sg" {
 ## ECS
 
 resource "aws_ecs_cluster" "main" {
-  name = "${var.app_name}-${var.environment}-ecs-cluster"
+  name = "${var.name}-${var.environment}-ecs-cluster"
 }
 
 resource "aws_ecs_service" "main" {
-  name            = "${var.app_name}-${var.environment}-ecs-lbsg"
+  name            = "${var.name}-${var.environment}-ecs-lbsg"
   cluster         = aws_ecs_cluster.main.id
   launch_type     = "FARGATE"
   task_definition = aws_ecs_task_definition.main.arn
@@ -100,7 +100,7 @@ resource "aws_ecs_service" "main" {
 
   load_balancer {
     target_group_arn = aws_alb_target_group.test.id
-    container_name   = var.app_name
+    container_name   = var.name
     container_port   = "80"
   }
 
@@ -120,13 +120,13 @@ data "template_file" "task_definition" {
 
   vars = {
     image_url        = var.docker_image
-    container_name   = var.app_name
+    container_name   = var.name
     log_group_name   = aws_cloudwatch_log_group.app.name
   }
 }
 
 resource "aws_ecs_task_definition" "main" {
-  family                   = "${var.app_name}-${var.environment}"
+  family                   = "${var.name}-${var.environment}"
   container_definitions    = data.template_file.task_definition.rendered
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
@@ -138,7 +138,7 @@ resource "aws_ecs_task_definition" "main" {
 ## IAM
 
 resource "aws_iam_role" "task_init" {
-  name               = "${var.app_name}-${var.environment}-task-init-role"
+  name               = "${var.name}-${var.environment}-task-init-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy_definition.json
 }
 
@@ -175,13 +175,13 @@ resource "aws_iam_role_policy" "task_init_policy" {
 ## ALB
 
 resource "aws_alb" "main" {
-  name            = "${var.app_name}-${var.environment}"
+  name            = "${var.name}-${var.environment}"
   subnets         = aws_subnet.selected.*.id
   security_groups = [aws_security_group.lb_sg.id]
 }
 
 resource "aws_alb_target_group" "test" {
-  name        = "${var.app_name}-${var.environment}"
+  name        = "${var.name}-${var.environment}"
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
@@ -202,9 +202,9 @@ resource "aws_alb_listener" "front_end" {
 ## CloudWatch Logs
 
 resource "aws_cloudwatch_log_group" "ecs" {
-  name = "${var.app_name}-${var.environment}/ecs"
+  name = "${var.name}-${var.environment}/ecs"
 }
 
 resource "aws_cloudwatch_log_group" "app" {
-  name = "${var.app_name}-${var.environment}/app"
+  name = "${var.name}-${var.environment}/app"
 }
