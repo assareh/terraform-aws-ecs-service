@@ -176,7 +176,7 @@ resource "aws_iam_role_policy" "task_init_policy" {
 
 resource "aws_alb" "main" {
   name            = "${var.name}-${var.environment}"
-  subnets         = data.aws_subnet.selected.id
+  subnets         = [data.aws_subnet.selected.id]
   security_groups = [aws_security_group.lb_sg.id]
 }
 
