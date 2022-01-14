@@ -5,7 +5,3 @@ output "alb_hostname" {
 output "task_def" {
   value = aws_ecs_task_definition.main.arn
 }
-
-output "vpc_id" {
-  value = aws_vpc.main.id
-}
