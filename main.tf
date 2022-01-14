@@ -106,7 +106,7 @@ resource "aws_ecs_service" "main" {
 
   network_configuration {
     security_groups  = [aws_security_group.instance_sg.id]
-    subnets          = [aws_subnet.selected.*.id]
+    subnets          = [data.aws_subnet.selected.*.id]
     assign_public_ip = true
   }
 
@@ -176,7 +176,7 @@ resource "aws_iam_role_policy" "task_init_policy" {
 
 resource "aws_alb" "main" {
   name            = "${var.name}-${var.environment}"
-  subnets         = aws_subnet.selected.*.id
+  subnets         = data.aws_subnet.selected.*.id
   security_groups = [aws_security_group.lb_sg.id]
 }
 
